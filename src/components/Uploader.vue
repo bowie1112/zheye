@@ -1,6 +1,6 @@
 <template>
   <div class="file-upload">
-    <div class="file-upload-container" @click.prevent="triggerUpload"  v-bind="$attrs">
+    <div class="file-upload-container" @click.prevent="triggerUpload" v-bind="$attrs">
       <slot v-if="fileStatus === 'loading'" name="loading">
         <button class="btn btn-primary" disabled>正在上传...</button>
       </slot>
@@ -20,10 +20,10 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, PropType } from 'vue'
+import { defineComponent, ref, PropType, watch } from 'vue'
 import axios from 'axios'
 type UploadStatus = 'ready' | 'loading' | 'success' | 'error'
-type CheckFunction = (file: File) => boolean
+type CheckFunction = (file: File) => boolean;
 export default defineComponent({
   props: {
     action: {
@@ -32,14 +32,24 @@ export default defineComponent({
     },
     beforeUpload: {
       type: Function as PropType<CheckFunction>
+    },
+    uploaded: {
+      type: Object
     }
   },
   inheritAttrs: false,
   emits: ['file-uploaded', 'file-uploaded-error'],
   setup (props, context) {
     const fileInput = ref<null | HTMLInputElement>(null)
-    const fileStatus = ref<UploadStatus>('ready')
-    const uploadedData = ref()
+    console.log(props.uploaded)
+    const fileStatus = ref<UploadStatus>(props.uploaded ? 'success' : 'ready')
+    const uploadedData = ref(props.uploaded)
+    watch(() => props.uploaded, (newValue) => {
+      if (newValue) {
+        fileStatus.value = 'success'
+        uploadedData.value = newValue
+      }
+    })
     const triggerUpload = () => {
       if (fileInput.value) {
         fileInput.value.click()
@@ -68,7 +78,7 @@ export default defineComponent({
           context.emit('file-uploaded', resp.data)
         }).catch((error) => {
           fileStatus.value = 'error'
-          context.emit('file-uploaded-error', error)
+          context.emit('file-uploaded-error', { error })
         }).finally(() => {
           if (fileInput.value) {
             fileInput.value.value = ''
@@ -80,8 +90,8 @@ export default defineComponent({
       fileInput,
       triggerUpload,
       fileStatus,
-      handleFileChange,
-      uploadedData
+      uploadedData,
+      handleFileChange
     }
   }
 })
