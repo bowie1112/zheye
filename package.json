@@ -21,6 +21,8 @@
     "vuex": "^4.1.0"
   },
   "devDependencies": {
+    "@types/node": "^22.14.1",
+    "@types/webpack-env": "^1.18.8",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
     "@vue/cli-plugin-babel": "~5.0.0",
