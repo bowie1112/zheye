@@ -1,7 +1,7 @@
 import { createStore, Commit } from 'vuex'
 import axios, { AxiosRequestConfig } from 'axios'
 import { arrToObj, objToArr } from './helper'
-export interface ResponseType<P = {unknown}> {
+export interface ResponseType<P = unknown> {
   code: number;
   msg: string;
   data: P;
@@ -50,7 +50,7 @@ export interface GlobalDataProps {
   token: string;
   error: GlobalErrorProps;
   loading: boolean;
-  columns: { data: ListProps<ColumnProps>; isLoaded: boolean; total: number};
+  columns: { data: ListProps<ColumnProps>; currentPage: number; total: number };
   posts: { data: ListProps<PostProps>; loadedColumns: string[] };
   user: UserProps;
 }
@@ -69,7 +69,7 @@ const store = createStore<GlobalDataProps>({
     token: localStorage.getItem('token') || '',
     error: { status: false },
     loading: false,
-    columns: { data: {}, isLoaded: false, total: 0 },
+    columns: { data: {}, currentPage: 0, total: 0 },
     posts: { data: {}, loadedColumns: [] },
     user: { isLogin: false }
   },
@@ -82,14 +82,12 @@ const store = createStore<GlobalDataProps>({
     },
     fetchColumns (state, rawData) {
       const { data } = state.columns
-      const { list, count } = rawData.data
+      const { list, count, currentPage } = rawData.data
       state.columns = {
         data: { ...data, ...arrToObj(list) },
         total: count,
-        isLoaded: true
+        currentPage: currentPage * 1
       }
-      // state.columns.data = arrToObj(rawData.data.list)
-      // state.columns.isLoaded = true
     },
     fetchColumn (state, rawData) {
       state.columns.data[rawData.data._id] = rawData.data
@@ -135,7 +133,9 @@ const store = createStore<GlobalDataProps>({
       // if (!state.columns.isLoaded) {
       //   return asyncAndCommit('/columns', 'fetchColumns', commit)
       // }
-      return asyncAndCommit(`/columns?currentPage=${currentPage}&pageSize=${pageSize}`, 'fetchColumns', commit)
+      if (state.columns.currentPage < currentPage) {
+        return asyncAndCommit(`/columns?currentPage=${currentPage}&pageSize=${pageSize}`, 'fetchColumns', commit)
+      }
     },
     fetchColumn ({ state, commit }, cid) {
       if (!state.columns.data[cid]) {
