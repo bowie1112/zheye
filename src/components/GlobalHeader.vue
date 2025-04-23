@@ -38,9 +38,8 @@ export default defineComponent({
     const router = useRouter()
     const store = useStore()
     const handleLogout = () => {
-      store.dispatch('logout').then(() => {
-        router.push('/login') // 退出后跳转到登录页面
-      })
+      store.commit('logout')
+      router.push('/login') // 退出后跳转到登录页面
     }
     return {
       handleLogout
