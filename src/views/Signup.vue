@@ -93,7 +93,7 @@ export default defineComponent({
           nickName: formData.nickName
         }
         axios.post('/users/', payload).then(data => {
-          createMessage('注册成功 正在跳转登录页面', 'success')
+          createMessage('注册成功 正在跳转登录页面', 'success', 2000)
           setTimeout(() => {
             router.push('/login')
           }, 2000)
