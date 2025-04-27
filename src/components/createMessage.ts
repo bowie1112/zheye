@@ -1,27 +1,19 @@
-import { h, render } from 'vue'
+import { createApp } from 'vue'
 import Message from './Message.vue'
 export type MessageType = 'success' | 'error' | 'default'
 
-const createMessage = (message: string, type: MessageType, timeout?: number) => {
-  const messageVnode = h(Message, {
+const createMessage = (message: string, type: MessageType, timeout = 2000) => {
+  const messageInstance = createApp(Message, {
     message,
     type
   })
   const mountNode = document.createElement('div')
   document.body.appendChild(mountNode)
-  render(messageVnode, mountNode)
-  const destory = () => {
-    render(null, mountNode)
+  messageInstance.mount(mountNode)
+  setTimeout(() => {
+    messageInstance.unmount()
     document.body.removeChild(mountNode)
-  }
-  if (timeout) {
-    setTimeout(() => {
-      destory()
-    }, timeout)
-  }
-  return {
-    destory
-  }
+  }, timeout)
 }
 
 export default createMessage
