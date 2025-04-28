@@ -35,7 +35,7 @@
       </div>
       <div class="mb-3">
         <label class="form-label">文章详情：</label>
-        <textarea ref="textArea"></textarea>
+        <editor v-model="contentVal" :options="editorOptions"></editor>
         <validate-input
           rows="10"
           tag="textarea"
@@ -56,11 +56,12 @@
 import { defineComponent, ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter, useRoute } from 'vue-router'
-import EasyMDE from 'easymde'
+import { Options } from 'easymde'
 import { GlobalDataProps, PostProps, ResponseType, ImageProps } from '../store'
 import ValidateInput, { RulesProp } from '../components/ValidateInput.vue'
 import ValidateForm from '../components/ValidateForm.vue'
 import Uploader from '../components/Uploader.vue'
+import Editor from '../components/Editor.vue'
 import createMessage from '../components/createMessage'
 import { commonUploadCheck } from '../helper'
 export default defineComponent({
@@ -68,7 +69,8 @@ export default defineComponent({
   components: {
     ValidateInput,
     ValidateForm,
-    Uploader
+    Uploader,
+    Editor
   },
   setup () {
     const uploadedData = ref()
@@ -79,6 +81,9 @@ export default defineComponent({
     const store = useStore<GlobalDataProps>()
     const textArea = ref<null | HTMLTextAreaElement>(null)
     let imageId = ''
+    const editorOptions: Options = {
+      spellChecker: false
+    }
     const titleRules: RulesProp = [
       { type: 'required', message: '文章标题不能为空' }
     ]
@@ -87,9 +92,6 @@ export default defineComponent({
       { type: 'required', message: '文章详情不能为空' }
     ]
     onMounted(() => {
-      if (textArea.value) {
-        const easyMDEInstance = new EasyMDE({ element: textArea.value })
-      }
       if (isEditMode) {
         store.dispatch('fetchPost', route.query.id).then((rawData: ResponseType<PostProps>) => {
           const currentPost = rawData.data
@@ -145,7 +147,8 @@ export default defineComponent({
       handleFileUploaded,
       uploadedData,
       isEditMode,
-      textArea
+      textArea,
+      editorOptions
     }
   }
 })
