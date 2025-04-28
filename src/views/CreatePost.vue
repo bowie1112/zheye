@@ -3,7 +3,7 @@
     <h4>{{isEditMode ? '编辑文章' : '新建文章'}}</h4>
     <uploader
       action="/upload"
-      :beforeUpload="commonUploadCheck"
+      :beforeUpload="uploadCheck"
       @file-uploaded="handleFileUploaded"
       :uploaded="uploadedData"
       class="d-flex align-items-center justify-content-center bg-light text-secondary w-100 my-4"
@@ -12,7 +12,7 @@
       <template #loading>
         <div class="d-flex">
           <div class="spinner-border text-secondary" role="status">
-            <span class="sr-only">Loading...</span>
+            <span class="visually-hidden">Loading...</span>
           </div>
           <h2>正在上传</h2>
         </div>
@@ -35,14 +35,14 @@
       </div>
       <div class="mb-3">
         <label class="form-label">文章详情：</label>
-        <editor v-model="contentVal" :options="editorOptions"></editor>
-        <validate-input
-          rows="10"
-          tag="textarea"
-          placeholder="请输入文章详情"
-          :rules="contentRules"
+        <editor
           v-model="contentVal"
-        />
+          :options="editorOptions"
+          @blur="checkEditor"
+          :class="{'is-invalid': !editorStatus.isValid}"
+        >
+        </editor>
+        <span v-if="!editorStatus.isValid" class="invalid-feedback mt-1">{{editorStatus.message}}</span>
       </div>
       <template #submit>
         <button class="btn btn-primary btn-large">{{isEditMode ? '更新文章' : '发表文章'}}
@@ -53,7 +53,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted } from 'vue'
+import { defineComponent, ref, onMounted, reactive } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter, useRoute } from 'vue-router'
 import { Options } from 'easymde'
@@ -63,7 +63,7 @@ import ValidateForm from '../components/ValidateForm.vue'
 import Uploader from '../components/Uploader.vue'
 import Editor from '../components/Editor.vue'
 import createMessage from '../components/createMessage'
-import { commonUploadCheck } from '../helper'
+import { beforeUploadCheck } from '../helper'
 export default defineComponent({
   name: 'CreatePost',
   components: {
@@ -75,6 +75,10 @@ export default defineComponent({
   setup () {
     const uploadedData = ref()
     const titleVal = ref('')
+    const editorStatus = reactive({
+      isValid: true,
+      message: ''
+    })
     const router = useRouter()
     const route = useRoute()
     const isEditMode = !!route.query.id
@@ -91,6 +95,15 @@ export default defineComponent({
     const contentRules: RulesProp = [
       { type: 'required', message: '文章详情不能为空' }
     ]
+    const checkEditor = () => {
+      if (contentVal.value.trim() === '') {
+        editorStatus.isValid = false
+        editorStatus.message = '文章详情不能为空'
+      } else {
+        editorStatus.isValid = true
+        editorStatus.message = ''
+      }
+    }
     onMounted(() => {
       if (isEditMode) {
         store.dispatch('fetchPost', route.query.id).then((rawData: ResponseType<PostProps>) => {
@@ -109,7 +122,8 @@ export default defineComponent({
       }
     }
     const onFormSubmit = (result: boolean) => {
-      if (result) {
+      checkEditor()
+      if (result && editorStatus.isValid) {
         const { column, _id } = store.state.user
         if (column) {
           const newPost: PostProps = {
@@ -137,18 +151,31 @@ export default defineComponent({
         }
       }
     }
+    const uploadCheck = (file: File) => {
+      const result = beforeUploadCheck(file, { format: ['image/jpeg', 'image/png'], size: 1 })
+      const { passed, error } = result
+      if (error === 'format') {
+        createMessage('上传图片只能是 JPG/PNG 格式!', 'error')
+      }
+      if (error === 'size') {
+        createMessage('上传图片大小不能超过 1Mb', 'error')
+      }
+      return passed
+    }
     return {
       titleRules,
       titleVal,
       contentVal,
       contentRules,
       onFormSubmit,
-      commonUploadCheck,
+      uploadCheck,
       handleFileUploaded,
-      uploadedData,
       isEditMode,
+      uploadedData,
       textArea,
-      editorOptions
+      editorOptions,
+      checkEditor,
+      editorStatus
     }
   }
 })

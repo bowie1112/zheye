@@ -4,7 +4,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { defineProps, defineEmits, ref, onMounted, onUnmounted } from 'vue'
+import { defineProps, defineEmits, ref, onMounted, onUnmounted, defineExpose, watch } from 'vue'
 import EasyMDE, { Options } from 'easymde'
 // 类型，属性以及事件
 interface EditorProps {
@@ -19,10 +19,18 @@ interface EditorEvents {
 const props = defineProps<EditorProps>()
 const emit = defineEmits<EditorEvents>()
 // 有了模版我们需要一些初始的数据
+// 1 暴露对应的方法
+// 2 结合页面实现验证功能
 const textArea = ref<null | HTMLTextAreaElement>(null)
 let easyMDEInstance: EasyMDE | null = null
 const innerValue = ref(props.modelValue || '')
-
+watch(() => props.modelValue, (newValue) => {
+  if (easyMDEInstance) {
+    if (newValue !== innerValue.value) {
+      easyMDEInstance.value(newValue || '')
+    }
+  }
+})
 onMounted(() => {
   if (textArea.value) {
     // 组装 options
@@ -56,7 +64,21 @@ onUnmounted(() => {
   }
   easyMDEInstance = null
 })
+const clear = () => {
+  if (easyMDEInstance) {
+    easyMDEInstance.value('')
+  }
+}
+const getMDEInstance = () => {
+  return easyMDEInstance
+}
+defineExpose({
+  clear,
+  getMDEInstance
+})
 </script>
 <style>
-
+.vue-easymde-editor.is-invalid {
+  border: 1px solid #dc3545;
+}
 </style>
