@@ -19,7 +19,7 @@
       </template>
       <template #uploaded="dataProps">
         <div class="uploaded-area">
-          <img :src="dataProps.uploadedData.data.url">
+          <img :src="dataProps.uploadedData && dataProps.uploadedData.data.url">
           <h3>点击重新上传</h3>
         </div>
       </template>
@@ -35,6 +35,7 @@
       </div>
       <div class="mb-3">
         <label class="form-label">文章详情：</label>
+        <textarea ref="textArea"></textarea>
         <validate-input
           rows="10"
           tag="textarea"
@@ -55,6 +56,7 @@
 import { defineComponent, ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter, useRoute } from 'vue-router'
+import EasyMDE from 'easymde'
 import { GlobalDataProps, PostProps, ResponseType, ImageProps } from '../store'
 import ValidateInput, { RulesProp } from '../components/ValidateInput.vue'
 import ValidateForm from '../components/ValidateForm.vue'
@@ -75,6 +77,7 @@ export default defineComponent({
     const route = useRoute()
     const isEditMode = !!route.query.id
     const store = useStore<GlobalDataProps>()
+    const textArea = ref<null | HTMLTextAreaElement>(null)
     let imageId = ''
     const titleRules: RulesProp = [
       { type: 'required', message: '文章标题不能为空' }
@@ -84,6 +87,9 @@ export default defineComponent({
       { type: 'required', message: '文章详情不能为空' }
     ]
     onMounted(() => {
+      if (textArea.value) {
+        const easyMDEInstance = new EasyMDE({ element: textArea.value })
+      }
       if (isEditMode) {
         store.dispatch('fetchPost', route.query.id).then((rawData: ResponseType<PostProps>) => {
           const currentPost = rawData.data
@@ -138,7 +144,8 @@ export default defineComponent({
       commonUploadCheck,
       handleFileUploaded,
       uploadedData,
-      isEditMode
+      isEditMode,
+      textArea
     }
   }
 })

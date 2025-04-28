@@ -39,7 +39,6 @@
     "tests/**/*.tsx"
   ],
   "exclude": [
-    "node_modules",
-    "src/components/HelloWorld.vue"
+    "node_modules"
   ]
 }

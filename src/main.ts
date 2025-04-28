@@ -4,6 +4,7 @@ import router from './router'
 import store from './store'
 
 import App from './App.vue'
+import 'easymde/dist/easymde.min.css'
 // 替换 baseURL
 axios.defaults.baseURL = 'http://apis.imooc.com/api/'
 
