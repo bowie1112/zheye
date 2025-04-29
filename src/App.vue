@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <global-header :user="currentUser"></global-header>
+    <global-header :data="currentUser" :is-login="isLogin"></global-header>
     <loader v-if="isLoading"></loader>
 
     <router-view></router-view>
@@ -19,15 +19,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, onMounted, watch } from 'vue'
-import { useStore } from 'vuex'
-import axios from 'axios'
+import { defineComponent, computed, watch } from 'vue'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import GlobalHeader from './components/GlobalHeader.vue'
 import Loader from './components/Loader.vue'
 import createMessage from './components/createMessage'
-import { GlobalDataProps } from './store'
 import { useGlobalStore } from './store/global'
+import { useUserStore } from './store/user'
 export default defineComponent({
   name: 'App',
   components: {
@@ -35,9 +33,10 @@ export default defineComponent({
     Loader
   },
   setup () {
-    const store = useStore<GlobalDataProps>()
     const globalStore = useGlobalStore()
-    const currentUser = computed(() => store.state.user)
+    const currentUser = computed(() => userStore.data)
+    const isLogin = computed(() => userStore.isLogin)
+    const userStore = useUserStore()
     const isLoading = computed(() => globalStore.loading)
     const error = computed(() => globalStore.error)
     watch(() => error.value.status, () => {
@@ -49,7 +48,8 @@ export default defineComponent({
     return {
       currentUser,
       isLoading,
-      error
+      error,
+      isLogin
     }
   }
 })

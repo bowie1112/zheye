@@ -29,11 +29,11 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue'
-import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import ValidateInput, { RulesProp } from '../components/ValidateInput.vue'
 import ValidateForm from '../components/ValidateForm.vue'
 import createMessage from '@/components/createMessage'
+import { useUserStore } from '@/store/user'
 export default defineComponent({
   name: 'Login',
   components: {
@@ -43,7 +43,7 @@ export default defineComponent({
   setup () {
     const emailVal = ref('')
     const router = useRouter()
-    const store = useStore()
+    const userStore = useUserStore()
     const emailRules: RulesProp = [
       { type: 'required', message: '电子邮箱地址不能为空' },
       { type: 'email', message: '请输入正确的电子邮箱格式' }
@@ -52,20 +52,30 @@ export default defineComponent({
     const passwordRules: RulesProp = [
       { type: 'required', message: '密码不能为空' }
     ]
-    const onFormSubmit = (result: boolean) => {
+    const onFormSubmit = async (result: boolean) => {
       if (result) {
-        const payload = {
-          email: emailVal.value,
-          password: passwordVal.value
-        }
-        store.dispatch('loginAndFetch', payload).then(data => {
-          createMessage('登录成功两秒后跳转', 'success', 2000)
+        // const payload = {
+        //   email: emailVal.value,
+        //   password: passwordVal.value
+        // }
+        // store.dispatch('loginAndFetch', payload).then(data => {
+        //   createMessage('登录成功两秒后跳转', 'success', 2000)
+        //   setTimeout(() => {
+        //     router.push({ name: 'home' })
+        //   }, 2000)
+        // }).catch(err => {
+        //   console.log(err)
+        // })
+        try {
+          await userStore.login(emailVal.value, passwordVal.value)
+          await userStore.fetchCurrentUser()
+          createMessage('登录成功 2秒后跳转首页', 'success', 2000)
           setTimeout(() => {
-            router.push({ name: 'home' })
+            router.push('/')
           }, 2000)
-        }).catch(err => {
-          console.log(err)
-        })
+        } catch (error) {
+          console.log(error)
+        }
       }
     }
     return {
