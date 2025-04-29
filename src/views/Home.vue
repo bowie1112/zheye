@@ -27,7 +27,9 @@
 <script lang="ts">
 import { defineComponent, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
+import { storeToRefs } from 'pinia'
 import { GlobalDataProps } from '../store'
+import { useTestStore } from '@/store/test'
 import useLoadMore from '../hooks/useLoadMore'
 import ColumnList from '../components/ColumnList.vue'
 

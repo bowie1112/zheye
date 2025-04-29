@@ -27,6 +27,7 @@ import GlobalHeader from './components/GlobalHeader.vue'
 import Loader from './components/Loader.vue'
 import createMessage from './components/createMessage'
 import { GlobalDataProps } from './store'
+import { useGlobalStore } from './store/global'
 export default defineComponent({
   name: 'App',
   components: {
@@ -35,9 +36,10 @@ export default defineComponent({
   },
   setup () {
     const store = useStore<GlobalDataProps>()
+    const globalStore = useGlobalStore()
     const currentUser = computed(() => store.state.user)
-    const isLoading = computed(() => store.state.loading)
-    const error = computed(() => store.state.error)
+    const isLoading = computed(() => globalStore.loading)
+    const error = computed(() => globalStore.error)
     watch(() => error.value.status, () => {
       const { status, message } = error.value
       if (status && message) {
