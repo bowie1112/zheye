@@ -18,8 +18,10 @@ import { defineComponent, computed, onMounted, watch, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useStore } from 'vuex'
 import { GlobalDataProps, ColumnProps } from '../store'
+import { useColumnStore } from '../store/column'
+import { useUserStore } from '../store/user'
 import PostList from '../components/PostList.vue'
-import { generateFitUrl } from '../helper'
+import { addColumnAvatar } from '../helper'
 export default defineComponent({
   components: {
     PostList
@@ -27,25 +29,34 @@ export default defineComponent({
   setup () {
     const route = useRoute()
     const store = useStore<GlobalDataProps>()
-    const currentId = ref(route.params.id)
+    const columnStore = useColumnStore()
+    const userStore = useUserStore()
+    // 为了让 computed 响应对应的变化，添加响应式对象
+    const currentId = ref(route.params.id as string)
     onMounted(() => {
-      store.dispatch('fetchColumn', currentId.value)
+      // store.dispatch('fetchColumn', currentId.value)
+      columnStore.fetchColumn(currentId.value)
       store.dispatch('fetchPosts', currentId.value)
     })
+    // 检测变化
     watch(() => route.params, (toParams) => {
       // 确保要变化的路径是进入到用户的专栏
-      if ((toParams && toParams.id) === store.state.user.column) {
+      // 判断 跳转的 ID 是否存在
+      const jumpId = toParams && toParams.id
+      const column = userStore.data?.column
+      if (jumpId && column && (jumpId === column)) {
         // 重新发送请求，在 store 中有对应的缓存设置
-        store.dispatch('fetchColumn', toParams.id)
-        store.dispatch('fetchPosts', toParams.id)
+        columnStore.fetchColumn(jumpId)
+        // store.dispatch('fetchColumn', jumpId)
+        store.dispatch('fetchPosts', { cid: jumpId })
         // 重新赋值，这样 computed 会变化
-        currentId.value = toParams.id
+        currentId.value = toParams.id as string
       }
     })
     const column = computed(() => {
-      const selectColumn = store.getters.getColumnById(currentId.value) as ColumnProps | undefined
+      const selectColumn = columnStore.getColumnById(currentId.value)
       if (selectColumn) {
-        generateFitUrl(selectColumn, 100, 100)
+        addColumnAvatar(selectColumn, 100, 100)
       }
       return selectColumn
     })

@@ -9,3 +9,18 @@ export interface ResponseType<P = Record<string, never>> {
       msg: string;
       data: P;
     }
+export interface ListDictType<P> {
+        [id: string]: P;
+      }
+
+export interface ListResponse<P> {
+        list: P[];
+        count: number;
+        currentPage: number;
+        pageSize: number;
+      }
+export interface ListReqType {
+          currentPage?: number;
+          pageSize?: number;
+        }
+export type ListResType<P = any> = ResponseType<ListResponse<P>>

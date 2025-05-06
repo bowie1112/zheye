@@ -27,10 +27,9 @@
 <script lang="ts">
 import { defineComponent, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
-import { storeToRefs } from 'pinia'
 import { GlobalDataProps } from '../store'
-import { useTestStore } from '@/store/test'
-import useLoadMore from '../hooks/useLoadMore'
+import { useColumnStore } from '../store/column'
+import useLoadMore from '../hooks/useLoadMore2'
 import ColumnList from '../components/ColumnList.vue'
 
 export default defineComponent({
@@ -40,13 +39,15 @@ export default defineComponent({
   },
   setup () {
     const store = useStore<GlobalDataProps>()
-    const total = computed(() => store.state.columns.total)
-    const currentPage = computed(() => store.state.columns.currentPage)
+    const columnStore = useColumnStore()
+    const total = computed(() => columnStore.total)
+    const currentPage = computed(() => columnStore.currentPage)
     onMounted(() => {
-      store.dispatch('fetchColumns', { pageSize: 3 })
+      columnStore.fetchColumns({ pageSize: 3 })
+      // store.dispatch('fetchColumns', { pageSize: 3 })
     })
-    const list = computed(() => store.getters.getColumns)
-    const { loadMorePage, isLastPage } = useLoadMore('fetchColumns', total, { pageSize: 3, currentPage: (currentPage.value ? currentPage.value + 1 : 2) })
+    const list = computed(() => columnStore.getColumns)
+    const { loadMorePage, isLastPage } = useLoadMore(columnStore, 'fetchColumns', { pageSize: 3, currentPage, total })
     return {
       list,
       loadMorePage,
