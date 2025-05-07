@@ -12,12 +12,12 @@
 
 <script lang="ts">
 import { defineComponent, computed, PropType } from 'vue'
-import { UserProps } from '../store'
+import { UserDataProps } from '@/store/user'
 import { addColumnAvatar } from '../helper'
 export default defineComponent({
   props: {
     user: {
-      type: Object as PropType<UserProps>,
+      type: Object as PropType<UserDataProps>,
       required: true
     }
   },

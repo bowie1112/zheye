@@ -33,9 +33,11 @@
 <script lang="ts">
 import { defineComponent, onMounted, computed, ref } from 'vue'
 import { marked } from 'marked'
-import { useStore } from 'vuex'
 import { useRoute, useRouter } from 'vue-router'
-import { GlobalDataProps, PostProps, ImageProps, UserProps, ResponseType } from '../store'
+// import { GlobalDataProps, PostProps, ImageProps, UserProps, ResponseType } from '../store'
+import { usePostStore } from '../store/post'
+import { useUserStore, UserDataProps } from '../store/user'
+import { ImageProps } from '../store/utils'
 import UserProfile from '../components/UserProfile.vue'
 import Modal from '../components/Modal.vue'
 import createMessage from '../components/createMessage'
@@ -47,15 +49,18 @@ export default defineComponent({
     Modal
   },
   setup () {
-    const store = useStore<GlobalDataProps>()
     const route = useRoute()
     const router = useRouter()
+    const postStore = usePostStore()
+    const userStore = useUserStore()
     const modalIsVisible = ref(false)
-    const currentId = route.params.id
+    const currentId = route.params.id as string
     onMounted(() => {
-      store.dispatch('fetchPost', currentId)
+      postStore.fetchPost(currentId)
+      // store.dispatch('fetchPost', currentId)
     })
-    const currentPost = computed<PostProps>(() => store.getters.getCurrentPost(currentId))
+    const currentPost = computed(() => postStore.getCurrentPost(currentId))
+    // const currentPost = computed<PostProps>(() => store.getters.getCurrentPost(currentId))
     const currentHTML = computed(() => {
       if (currentPost.value && currentPost.value.content) {
         const { isHTML, content } = currentPost.value
@@ -64,10 +69,9 @@ export default defineComponent({
       return ''
     })
     const showEditArea = computed(() => {
-      const { isLogin, _id } = store.state.user
-      if (currentPost.value && currentPost.value.author && isLogin) {
-        const postAuthor = currentPost.value.author as UserProps
-        return postAuthor._id === _id
+      if (currentPost.value && currentPost.value.author && userStore.isLogin) {
+        const postAuthor = currentPost.value.author as UserDataProps
+        return postAuthor._id === userStore.data?._id
       } else {
         return false
       }
@@ -82,10 +86,10 @@ export default defineComponent({
     })
     const hideAndDelete = () => {
       modalIsVisible.value = false
-      store.dispatch('deletePost', currentId).then((rawData: ResponseType<PostProps>) => {
+      postStore.deletePost(currentId).then((data) => {
         createMessage('删除成功，2秒后跳转到专栏首页', 'success', 2000)
         setTimeout(() => {
-          router.push({ name: 'column', params: { id: rawData.data.column } })
+          router.push({ name: 'column', params: { id: data.column } })
         }, 2000)
       })
     }

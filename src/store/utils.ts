@@ -22,5 +22,6 @@ export interface ListResponse<P> {
 export interface ListReqType {
           currentPage?: number;
           pageSize?: number;
+          cid?:string;
         }
 export type ListResType<P = any> = ResponseType<ListResponse<P>>

@@ -58,6 +58,8 @@ import { useStore } from 'vuex'
 import { useRouter, useRoute } from 'vue-router'
 import { Options } from 'easymde'
 import { GlobalDataProps, PostProps, ResponseType, ImageProps } from '../store'
+import { usePostStore } from '../store/post'
+import { useUserStore } from '../store/user'
 import ValidateInput, { RulesProp } from '../components/ValidateInput.vue'
 import ValidateForm from '../components/ValidateForm.vue'
 import Uploader from '../components/Uploader.vue'
@@ -82,7 +84,10 @@ export default defineComponent({
     const router = useRouter()
     const route = useRoute()
     const isEditMode = !!route.query.id
+    const postId = route.query.id as string
     const store = useStore<GlobalDataProps>()
+    const postStore = usePostStore()
+    const userStore = useUserStore()
     const textArea = ref<null | HTMLTextAreaElement>(null)
     let imageId = ''
     const editorOptions: Options = {
@@ -106,8 +111,7 @@ export default defineComponent({
     }
     onMounted(() => {
       if (isEditMode) {
-        store.dispatch('fetchPost', route.query.id).then((rawData: ResponseType<PostProps>) => {
-          const currentPost = rawData.data
+        postStore.fetchPost(postId).then((currentPost) => {
           if (currentPost.image) {
             uploadedData.value = { data: currentPost.image }
           }
@@ -121,10 +125,10 @@ export default defineComponent({
         imageId = rawData.data._id
       }
     }
-    const onFormSubmit = (result: boolean) => {
+    const onFormSubmit = async (result: boolean) => {
       checkEditor()
-      if (result && editorStatus.isValid) {
-        const { column, _id } = store.state.user
+      if (result && editorStatus.isValid && userStore.data) {
+        const { column, _id } = userStore.data
         if (column) {
           const newPost: PostProps = {
             title: titleVal.value,
@@ -135,19 +139,28 @@ export default defineComponent({
           if (imageId) {
             newPost.image = imageId
           }
-          const actionName = isEditMode ? 'updatePost' : 'createPost'
-          const sendData = isEditMode
-            ? {
-                id: route.query.id,
-                payload: newPost
-              }
-            : newPost
-          store.dispatch(actionName, sendData).then(() => {
-            createMessage('发表成功，2秒后跳转到文章', 'success', 2000)
-            setTimeout(() => {
-              router.push({ name: 'column', params: { id: column } })
-            }, 2000)
-          })
+          // const actionName = isEditMode ? 'updatePost' : 'createPost'
+          // const sendData = isEditMode
+          //   ? {
+          //       id: route.query.id,
+          //       payload: newPost
+          //     }
+          //   : newPost
+          if (isEditMode) {
+            await postStore.updatePost(postId, newPost)
+          } else {
+            await postStore.createPost(newPost)
+          }
+          createMessage('发表成功，2秒后跳转到文章', 'success', 2000)
+          setTimeout(() => {
+            router.push({ name: 'column', params: { id: column } })
+          }, 2000)
+          // store.dispatch(actionName, sendData).then(() => {
+          //   createMessage('发表成功，2秒后跳转到文章', 'success', 2000)
+          //   setTimeout(() => {
+          //     router.push({ name: 'column', params: { id: column } })
+          //   }, 2000)
+          // })
         }
       }
     }

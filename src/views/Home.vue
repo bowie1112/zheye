@@ -47,7 +47,11 @@ export default defineComponent({
       // store.dispatch('fetchColumns', { pageSize: 3 })
     })
     const list = computed(() => columnStore.getColumns)
-    const { loadMorePage, isLastPage } = useLoadMore(columnStore, 'fetchColumns', { pageSize: 3, currentPage, total })
+    const { loadMorePage, isLastPage } = useLoadMore(columnStore, 'fetchColumns', {
+      currentPage,
+      total,
+      pageSize: 3
+    })
     return {
       list,
       loadMorePage,
