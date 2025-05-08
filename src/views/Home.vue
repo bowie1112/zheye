@@ -26,6 +26,8 @@
 
 <script lang="ts">
 import { defineComponent, computed, onMounted } from 'vue'
+import { useStore } from 'vuex'
+import { GlobalDataProps } from '../store'
 import { useColumnStore } from '../store/column'
 import useLoadMore from '../hooks/useLoadMore2'
 import ColumnList from '../components/ColumnList.vue'
@@ -36,12 +38,12 @@ export default defineComponent({
     ColumnList
   },
   setup () {
+    const store = useStore<GlobalDataProps>()
     const columnStore = useColumnStore()
     const total = computed(() => columnStore.total)
     const currentPage = computed(() => columnStore.currentPage)
     onMounted(() => {
       columnStore.fetchColumns({ pageSize: 3 })
-      // store.dispatch('fetchColumns', { pageSize: 3 })
     })
     const list = computed(() => columnStore.getColumns)
     const { loadMorePage, isLastPage } = useLoadMore(columnStore, 'fetchColumns', {
